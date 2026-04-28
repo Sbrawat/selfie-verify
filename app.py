@@ -74,17 +74,7 @@ except Exception as e:
 
 LEFT_EYE_TOP, LEFT_EYE_BOTTOM = 159, 145
 
-# Sidebar Navigation
-menu = ["Register New Account", "Login (Verify)"]
-choice = st.sidebar.selectbox("Select Action", menu)
-
-# Create the main window placeholder
-FRAME_WINDOW = st.empty()
-
-# 2: Fixed Camera Box Standby Frame
-# If the camera isn't running, show a black rectangle so the UI doesn't collapse
-standby_frame = np.zeros((480, 640, 3), dtype=np.uint8)
-FRAME_WINDOW.image(standby_frame, channels="RGB", width="stretch")
+# ... (Keep all your imports, CSS, and MediaPipe setup at the top as they were) ...
 
 # --- HELPER FUNCTION: EAR CALCULATION ---
 def calculate_ear(face_landmarks):
@@ -92,106 +82,179 @@ def calculate_ear(face_landmarks):
     bottom_point = face_landmarks[LEFT_EYE_BOTTOM].y
     return bottom_point - top_point
 
-# --- ROUTE 1: REGISTRATION ---
-if choice == "Register New Account":
-    st.sidebar.subheader("Register Your Face")
-    username = st.sidebar.text_input("Enter a Username:")
+# --- NEW: SESSION STATE MANAGEMENT ---
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.current_user = ""
+
+# ==========================================================
+# BIG BLOCK 1: USER IS LOGGED OUT (Show Camera & Menus)
+# ==========================================================
+if not st.session_state.logged_in:
     
-    run_cam = st.sidebar.checkbox("Start Camera")
-    capture_button = st.sidebar.button("Capture & Register")
-
-    if run_cam and username:
-        cap = cv2.VideoCapture(0)
-        st.sidebar.warning("Look directly at the camera and ensure good lighting.")
-        
-        while run_cam:
-            ret, frame = cap.read()
-            if not ret:
-                st.sidebar.error("Failed to access webcam.")
-                break
-            
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            FRAME_WINDOW.image(rgb_frame, channels="RGB", width="stretch")
-
-            if capture_button:
-                st.sidebar.info("Extracting facial features...")
-                face_locations = face_recognition.face_locations(rgb_frame)
-                encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-
-                if len(encodings) > 0:
-                    user_encoding = encodings[0]
-                    with open(f"{username}.pkl", "wb") as f:
-                        pickle.dump(user_encoding, f)
-                    st.sidebar.success(f"Successfully registered account for '{username}'!")
-                    break
+    # Sidebar Navigation
+    menu = ["Register New Account", "Login (Verify)"]
+    choice = st.sidebar.selectbox("Select Action", menu)
+    
+    # --- 🛠️ DEV TOOLS (FAST BYPASS) ---
+    # This adds a collapsible menu to instantly skip face verification
+    with st.sidebar.expander("🛠️ Dev Tools (Bypass CV)"):
+        st.write("Fast Login/Register for testing:")
+        test_user = st.text_input("Test Username:")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Force Register"):
+                # Creates a dummy file so the system thinks an account exists
+                with open(f"{test_user}.pkl", "wb") as f:
+                    pickle.dump([0]*128, f) # Dummy 128-d encoding
+                st.session_state.logged_in = True
+                st.session_state.current_user = test_user
+                st.rerun()
+        with col2:
+            if st.button("Force Login"):
+                if os.path.exists(f"{test_user}.pkl"):
+                    st.session_state.logged_in = True
+                    st.session_state.current_user = test_user
+                    st.rerun()
                 else:
-                    st.sidebar.error("No face detected. Please try again.")
-                    break 
-                    
-        cap.release()
+                    st.error("Account not found.")
+    st.sidebar.markdown("---")
 
-# --- ROUTE 2: LOGIN & VERIFICATION ---
-elif choice == "Login (Verify)":
-    st.sidebar.subheader("Identity Verification")
-    login_user = st.sidebar.text_input("Enter your Username to login:")
-    
-    if login_user:
-        if not os.path.exists(f"{login_user}.pkl"):
-            st.sidebar.error(f"Account '{login_user}' not found. Please register first.")
-        else:
-            run_cam = st.sidebar.checkbox("Start Camera for Verification")
+    # Create the main window placeholder & Standby Frame
+    FRAME_WINDOW = st.empty()
+    standby_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    FRAME_WINDOW.image(standby_frame, channels="RGB", use_container_width=True)
+
+    # --- ROUTE 1: REGISTRATION ---
+    if choice == "Register New Account":
+        st.sidebar.subheader("Register Your Face")
+        username = st.sidebar.text_input("Enter a Username:")
+        
+        run_cam = st.sidebar.checkbox("Start Camera")
+        capture_button = st.sidebar.button("Capture & Register")
+
+        if run_cam and username:
+            cap = cv2.VideoCapture(0)
+            st.sidebar.warning("Look directly at the camera and ensure good lighting.")
             
-            if run_cam:
-                with open(f"{login_user}.pkl", "rb") as f:
-                    saved_encoding = pickle.load(f)
-
-                cap = cv2.VideoCapture(0)
-                st.sidebar.warning("Please BLINK to prove liveness.")
+            while run_cam:
+                ret, frame = cap.read()
+                if not ret: break
                 
-                blink_detected = False
-                eye_closed = False
-                
-                while run_cam and not blink_detected:
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    
-                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    
-                    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-                    results = face_landmarker.detect(mp_image)
-                    
-                    if results.face_landmarks:
-                        face_landmarks = results.face_landmarks[0]
-                        ear = calculate_ear(face_landmarks)
-                        
-                        if ear < 0.012: 
-                            eye_closed = True
-                        elif ear > 0.015 and eye_closed:
-                            blink_detected = True
-                            st.sidebar.success("Liveness Confirmed! Matching face...")
-                    
-                    FRAME_WINDOW.image(rgb_frame, channels="RGB", width="stretch")
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
 
-                    if blink_detected:
-                        time.sleep(0.5) 
-                        ret, final_frame = cap.read()
-                        final_rgb = cv2.cvtColor(final_frame, cv2.COLOR_BGR2RGB)
-                        
-                        face_locations = face_recognition.face_locations(final_rgb)
-                        live_encodings = face_recognition.face_encodings(final_rgb, face_locations)
+                if capture_button:
+                    st.sidebar.info("Extracting facial features...")
+                    face_locations = face_recognition.face_locations(rgb_frame)
+                    encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-                        if len(live_encodings) > 0:
-                            live_encoding = live_encodings[0]
-                            matches = face_recognition.compare_faces([saved_encoding], live_encoding, tolerance=0.5)
-                            
-                            if matches[0]:
-                                st.balloons()
-                                st.sidebar.success("Access Granted! Identity Verified.")
-                            else:
-                                st.sidebar.error("Access Denied! Face does not match account.")
-                        else:
-                            st.sidebar.error("Face lost during capture. Try again.")
+                    if len(encodings) > 0:
+                        user_encoding = encodings[0]
+                        with open(f"{username}.pkl", "wb") as f:
+                            pickle.dump(user_encoding, f)
+                        
+                        st.session_state.logged_in = True
+                        st.session_state.current_user = username
+                        st.rerun()
+                    else:
+                        st.sidebar.error("No face detected. Please try again.")
                         break 
+            cap.release()
+
+    # --- ROUTE 2: LOGIN & VERIFICATION ---
+    elif choice == "Login (Verify)":
+        st.sidebar.subheader("Identity Verification")
+        login_user = st.sidebar.text_input("Enter your Username to login:")
+        
+        if login_user:
+            if not os.path.exists(f"{login_user}.pkl"):
+                st.sidebar.error(f"Account '{login_user}' not found. Please register first.")
+            else:
+                run_cam = st.sidebar.checkbox("Start Camera for Verification")
                 
-                cap.release()
+                if run_cam:
+                    with open(f"{login_user}.pkl", "rb") as f:
+                        saved_encoding = pickle.load(f)
+
+                    cap = cv2.VideoCapture(0)
+                    st.sidebar.warning("Please BLINK to prove liveness.")
+                    
+                    blink_detected = False
+                    eye_closed = False
+                    
+                    while run_cam and not blink_detected:
+                        ret, frame = cap.read()
+                        if not ret: break
+                        
+                        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+                        results = face_landmarker.detect(mp_image)
+                        
+                        if results.face_landmarks:
+                            face_landmarks = results.face_landmarks[0]
+                            ear = calculate_ear(face_landmarks)
+                            
+                            if ear < 0.012: 
+                                eye_closed = True
+                            elif ear > 0.015 and eye_closed:
+                                blink_detected = True
+                                st.sidebar.success("Liveness Confirmed! Matching face...")
+                        
+                        FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
+
+                        if blink_detected:
+                            time.sleep(0.5) 
+                            ret, final_frame = cap.read()
+                            final_rgb = cv2.cvtColor(final_frame, cv2.COLOR_BGR2RGB)
+                            
+                            face_locations = face_recognition.face_locations(final_rgb)
+                            live_encodings = face_recognition.face_encodings(final_rgb, face_locations)
+
+                            if len(live_encodings) > 0:
+                                live_encoding = live_encodings[0]
+                                matches = face_recognition.compare_faces([saved_encoding], live_encoding, tolerance=0.5)
+                                
+                                if matches[0]:
+                                    st.balloons()
+                                    st.session_state.logged_in = True
+                                    st.session_state.current_user = login_user
+                                    st.rerun()
+                                else:
+                                    st.sidebar.error("Access Denied! Face does not match account.")
+                            else:
+                                st.sidebar.error("Face lost during capture. Try again.")
+                            break 
+                    cap.release()
+
+# ==========================================================
+# BIG BLOCK 2: USER IS LOGGED IN (Show Dashboard)
+# ==========================================================
+else:
+    user = st.session_state.current_user
+    st.success(f"🔓 Authentication Successful. Welcome to your secure vault, {user}!")
+    
+    notes_file = f"{user}_notes.txt"
+    
+    saved_notes = ""
+    if os.path.exists(notes_file):
+        with open(notes_file, "r") as f:
+            saved_notes = f.read()
+
+    st.markdown("### Your Personal Canvas")
+    st.write("Write your private notes below. They will be saved securely to your account.")
+    
+    user_input = st.text_area("Canvas:", value=saved_notes, height=300, label_visibility="collapsed")
+    
+    col1, col2 = st.columns([1, 10])
+    with col1:
+        if st.button("Save"):
+            with open(notes_file, "w") as f:
+                f.write(user_input)
+            st.toast("Notes saved successfully!", icon="✅")
+            
+    st.sidebar.markdown("---")
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.logged_in = False
+        st.session_state.current_user = ""
+        st.rerun()

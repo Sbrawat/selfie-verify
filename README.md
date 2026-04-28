@@ -17,7 +17,7 @@ This project addresses the vulnerability of standard facial recognition systems 
 
 ## 🚀 Getting Started
 
-1. **Clone the repo:** `git clone [https://github.com/Sbrawat/selfie-verify.git]`
+1. **Clone the repo:** `git clone https://github.com/Sbrawat/selfie-verify.git`
 2. **Create Virtual Env:** `python -m venv venv`
 3. **Activate:** `source venv/bin/activate` (or `.\venv\Scripts\activate` on Windows)
 4. **Install Dependencies:** `pip install -r requirements.txt`

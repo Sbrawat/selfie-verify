@@ -61,7 +61,7 @@ st.title("Selfie Verify ")
 
 # --- MEDIAPIPE TASKS API SETUP ---
 try:
-    base_options = python.BaseOptions(model_asset_path='face_landmarker.task')
+    base_options = python.BaseOptions(model_asset_path='models/face_landmarker.task')
     options = vision.FaceLandmarkerOptions(
         base_options=base_options,
         running_mode=vision.RunningMode.IMAGE,
@@ -151,7 +151,7 @@ if not st.session_state.logged_in:
 
                     if len(encodings) > 0:
                         user_encoding = encodings[0]
-                        with open(f"{username}.pkl", "wb") as f:
+                        with open(f"database/profiles/{username}.pkl", "wb") as f:
                             pickle.dump(user_encoding, f)
                         
                         st.session_state.logged_in = True
@@ -234,7 +234,7 @@ else:
     user = st.session_state.current_user
     st.success(f"🔓 Authentication Successful. Welcome to your secure vault, {user}!")
     
-    notes_file = f"{user}_notes.txt"
+    notes_file = f"database/secure_notes/{user}_notes.txt"
     
     saved_notes = ""
     if os.path.exists(notes_file):

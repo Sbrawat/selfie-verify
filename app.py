@@ -1,6 +1,9 @@
 import streamlit as st
 import numpy as np
+import extra_streamlit_components as stx
+import datetime
 from ui import auth_views, dashboard
+from db.mongo_client import get_user_by_session
 
 # --- INITIALIZATION & UI LOCKDOWN ---
 st.set_page_config(page_title="FaceAuth", layout="wide")
@@ -16,9 +19,39 @@ st.markdown("""
 
 st.title("🔐 FaceAuth: Secure Account Verification")
 
+# --- COOKIE MANAGER SETUP ---
+# We initialize it directly with a unique key to prevent duplicate widget errors
+cookie_manager = stx.CookieManager(key="cookie_manager")
+
+# Initialize basic session states
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.current_user = ""
+
+# --- SILENT LOGIN LOGIC ---
+# If not currently logged in, check if a valid cookie exists in the browser
+if not st.session_state.logged_in:
+    saved_token = cookie_manager.get(cookie="FaceAuthToken")
+    if saved_token:
+        # Check database to see if this token is valid
+        valid_user = get_user_by_session(saved_token)
+        if valid_user:
+            st.session_state.logged_in = True
+            st.session_state.current_user = valid_user
+            st.rerun()
+
+# --- LOGOUT COOKIE DELETION ---
+if st.session_state.get('logout_triggered', False):
+    cookie_manager.delete("FaceAuthToken")
+    st.session_state.logout_triggered = False
+
+# --- SETTING THE COOKIE AFTER NEW LOGIN ---
+if st.session_state.logged_in and 'session_token' in st.session_state:
+    # Set the cookie to expire in 1 day
+    expire_date = datetime.datetime.now() + datetime.timedelta(days=1)
+    cookie_manager.set("FaceAuthToken", st.session_state.session_token, expires_at=expire_date)
+    # Remove the token from session state so we don't infinitely set it
+    del st.session_state['session_token']
 
 # --- ROUTER LOGIC ---
 if not st.session_state.logged_in:
@@ -26,7 +59,6 @@ if not st.session_state.logged_in:
     menu = ["Register New Account", "Login (Verify)"]
     choice = st.sidebar.selectbox("Select Action", menu)
     
-    # Placeholder for video UI to maintain strict CSS layout
     FRAME_WINDOW = st.empty()
     standby_frame = np.zeros((480, 640, 3), dtype=np.uint8)
     FRAME_WINDOW.image(standby_frame, channels="RGB", use_container_width=True)
@@ -37,5 +69,4 @@ if not st.session_state.logged_in:
         auth_views.show_login(FRAME_WINDOW)
 
 else:
-    # User is logged in, show the secure dashboard
     dashboard.show_dashboard()

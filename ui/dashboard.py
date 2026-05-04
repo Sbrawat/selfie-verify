@@ -1,5 +1,5 @@
 import streamlit as st
-from db.mongo_client import fetch_user_notes, save_user_notes
+from db.mongo_client import fetch_user_notes, save_user_notes, save_session_token # IMPORT NEW FUNC
 
 def show_dashboard():
     user = st.session_state.current_user
@@ -22,6 +22,10 @@ def show_dashboard():
             
     st.sidebar.markdown("---")
     if st.sidebar.button("🚪 Logout"):
+        # Erase the token from the database for security
+        save_session_token(st.session_state.current_user, "")
+        
         st.session_state.logged_in = False
         st.session_state.current_user = ""
+        st.session_state.logout_triggered = True # Signal to app.py to delete the cookie
         st.rerun()

@@ -1,8 +1,10 @@
 import streamlit as st
 import cv2
 import time
+import uuid # NEW IMPORT
+import datetime # NEW IMPORT
 from core.vision_engine import engine
-from db.mongo_client import create_user_profile, get_user_embedding
+from db.mongo_client import create_user_profile, get_user_embedding, save_session_token # IMPORT NEW FUNC
 
 def show_registration(FRAME_WINDOW):
     st.sidebar.subheader("Register Your Face")
@@ -28,9 +30,16 @@ def show_registration(FRAME_WINDOW):
                 if encoding is not None:
                     # Save to MongoDB instead of pickle
                     create_user_profile(username, encoding)
+                    
+                    # --- NEW: GENERATE & SAVE SESSION TOKEN ---
+                    token = uuid.uuid4().hex
+                    save_session_token(username, token)
+                    st.session_state.session_token = token # Temporarily hold it for app.py to see
+                    
                     st.session_state.logged_in = True
                     st.session_state.current_user = username
                     st.rerun()
+                    
                 else:
                     st.sidebar.error("No face detected. Please try again.")
                     break 
@@ -83,6 +92,12 @@ def show_login(FRAME_WINDOW):
                             
                             if is_match:
                                 st.balloons()
+                                
+                                # --- NEW: GENERATE & SAVE SESSION TOKEN ---
+                                token = uuid.uuid4().hex
+                                save_session_token(login_user, token)
+                                st.session_state.session_token = token
+                                
                                 st.session_state.logged_in = True
                                 st.session_state.current_user = login_user
                                 st.rerun()

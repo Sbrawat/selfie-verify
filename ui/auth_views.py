@@ -21,7 +21,7 @@ def show_registration(FRAME_WINDOW):
             if not ret: break
             
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
+            FRAME_WINDOW.image(rgb_frame, channels="RGB", width="stretch")
 
             if capture_button:
                 st.sidebar.info("Extracting facial features...")
@@ -78,7 +78,7 @@ def show_login(FRAME_WINDOW):
                         blink_detected = True
                         st.sidebar.success("Liveness Confirmed! Matching face...")
                     
-                    FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
+                    FRAME_WINDOW.image(rgb_frame, channels="RGB", width="stretch")
 
                     if blink_detected:
                         time.sleep(0.5) 

@@ -123,7 +123,7 @@ if not st.session_state.logged_in:
     # Create the main window placeholder & Standby Frame
     FRAME_WINDOW = st.empty()
     standby_frame = np.zeros((480, 640, 3), dtype=np.uint8)
-    FRAME_WINDOW.image(standby_frame, channels="RGB", use_container_width=True)
+    FRAME_WINDOW.image(standby_frame, channels="RGB", width="stretch")
 
     # --- ROUTE 1: REGISTRATION ---
     if choice == "Register New Account":
@@ -142,7 +142,7 @@ if not st.session_state.logged_in:
                 if not ret: break
                 
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
+                FRAME_WINDOW.image(rgb_frame, channels="RGB", width="stretch")
 
                 if capture_button:
                     st.sidebar.info("Extracting facial features...")
@@ -201,7 +201,7 @@ if not st.session_state.logged_in:
                                 blink_detected = True
                                 st.sidebar.success("Liveness Confirmed! Matching face...")
                         
-                        FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
+                        FRAME_WINDOW.image(rgb_frame, channels="RGB", width="stretch")
 
                         if blink_detected:
                             time.sleep(0.5) 

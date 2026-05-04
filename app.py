@@ -61,7 +61,7 @@ if not st.session_state.logged_in:
     
     FRAME_WINDOW = st.empty()
     standby_frame = np.zeros((480, 640, 3), dtype=np.uint8)
-    FRAME_WINDOW.image(standby_frame, channels="RGB", use_container_width=True)
+    FRAME_WINDOW.image(standby_frame, channels="RGB", width="stretch")
 
     if choice == "Register New Account":
         auth_views.show_registration(FRAME_WINDOW)

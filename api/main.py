@@ -93,6 +93,15 @@ async def verify_identity(username: str = Form(...), file: UploadFile = File(...
             match=False
         )
 
+@app.get("/")
+async def health_check():
+    """Simple health check to verify the API is running."""
+    return {
+        "status": "online", 
+        "service": "FaceAuth API", 
+        "version": "2.0.0"
+    }
+
 @app.get("/api/v1/logs")
 async def get_security_logs():
     """Endpoint for the Admin Dashboard to fetch SOC data."""

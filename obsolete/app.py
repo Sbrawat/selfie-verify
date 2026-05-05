@@ -2,8 +2,8 @@ import streamlit as st
 import numpy as np
 import extra_streamlit_components as stx
 import datetime
-from obsolete.ui import auth_views
-from obsolete.ui import dashboard
+from ui import auth_views
+from ui import dashboard
 from db.mongo_client import get_user_by_session
 
 # --- INITIALIZATION & UI LOCKDOWN ---

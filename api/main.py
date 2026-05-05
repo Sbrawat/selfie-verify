@@ -6,15 +6,15 @@ import numpy as np
 import uuid
 
 # Import your existing modular logic
-from obsolete.core.vision_engine import engine
-from obsolete.db.mongo_client import (
+from core.vision_engine import engine
+from db.mongo_client import (
     create_user_profile, 
     get_user_embedding, 
     save_session_token,
     log_security_event,
     get_recent_logs
 )
-from api.schemas import StandardResponse, VerifyResponse
+from schemas import StandardResponse, VerifyResponse
 
 app = FastAPI(title="FaceAuth API", version="2.0.0")
 

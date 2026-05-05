@@ -1,4 +1,4 @@
-# Selfie Verification for Account Authenticity
+# Selfie Verification for Account Authenticity Version 1
 
 A Computer Vision-based security pipeline featuring Liveness Detection and Facial Matching.
 

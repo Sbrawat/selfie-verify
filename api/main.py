@@ -6,8 +6,8 @@ import numpy as np
 import uuid
 
 # Import your existing modular logic
-from core.vision_engine import engine
-from db.mongo_client import (
+from obsolete.core.vision_engine import engine
+from obsolete.db.mongo_client import (
     create_user_profile, 
     get_user_embedding, 
     save_session_token,

@@ -35,7 +35,7 @@ def show_registration(FRAME_WINDOW):
                 blink_detected = True
                 st.sidebar.success("Liveness Confirmed! Extracting features...")
             
-            FRAME_WINDOW.image(rgb_frame, channels="RGB", use_container_width=True)
+            FRAME_WINDOW.image(rgb_frame, channels="RGB", width="strech")
 
             # 4. Process the registration once a blink happens
             if blink_detected:

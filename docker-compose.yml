@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # The Database Container
+  mongodb:
+    image: mongo:latest
+    container_name: faceauth_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - faceauth_net
+
+  # The FastAPI Microservice Container
+  api:
+    build: 
+      context: ./api      # Tells Docker to look in the api/ folder for the Dockerfile
+    container_name: faceauth_api
+    ports:
+      - "8000:8000"
+    environment:
+      # This overrides the localhost fallback in mongo_client.py
+      - MONGO_URI=mongodb://mongodb:27017/ 
+    depends_on:
+      - mongodb           # Ensures the DB starts before the API
+    networks:
+      - faceauth_net
+
+volumes:
+  mongo_data:             # Keeps your user data safe even if the container stops
+
+networks:
+  faceauth_net:           # A private internal network for them to talk to each other

@@ -1,6 +1,7 @@
 # db/mongo_client.py
 import pymongo
 import numpy as np
+import datetime # Make sure this is imported at the top
 
 # Connect to the MongoDB server
 MONGO_URI = "mongodb://localhost:27017/"
@@ -66,3 +67,23 @@ def get_user_by_session(session_token):
     if user:
         return user["username"]
     return None
+
+# Create a new collection for security logs
+logs_collection = db["SecurityLogs"]
+
+def log_security_event(username: str, action: str, success: bool, confidence_score: float = None):
+    """Records an authentication attempt for the Admin SOC dashboard."""
+    log_entry = {
+        "timestamp": datetime.datetime.now(datetime.timezone.utc),
+        "username": username,
+        "action": action, # e.g., "REGISTER" or "VERIFY"
+        "success": success,
+        "confidence_score": confidence_score
+    }
+    logs_collection.insert_one(log_entry)
+
+def get_recent_logs(limit: int = 50):
+    """Fetches the most recent security logs for the admin dashboard."""
+    # Sort by timestamp descending (-1)
+    logs = list(logs_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(limit))
+    return logs

@@ -1,7 +1,6 @@
 # api-demo/app.py
 import streamlit as st
-from obsolete.ui import auth_views
-from obsolete.ui import dashboard
+from ui import auth_views, dashboard
 
 st.set_page_config(page_title="SecureBank FaceAuth", layout="centered")
 st.title("🏦 SecureBank App")

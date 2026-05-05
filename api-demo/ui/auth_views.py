@@ -1,7 +1,6 @@
 # api-demo/ui/auth_views.py
 import streamlit as st
 from api_client import register_face, verify_face
-import datetime
 
 def show_registration():
     st.subheader("Open a SecureBank Account")

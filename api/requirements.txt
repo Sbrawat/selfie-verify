@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pymongo
+python-multipart
+pydantic
+mediapipe
+face_recognition
+numpy
+# IMPORTANT: Use headless OpenCV in Docker to prevent missing GUI library crashes
+opencv-python-headless

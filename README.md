@@ -1,10 +1,10 @@
 > **Note:** This repository represents the Version 1 prototype. The project has since been decoupled into a microservice architecture.
 > Please visit the active repositories:
 >
-> - **Backend API:** [Link to your future API repo]:
+> - **[selfie-auth-api](https://github.com/Sbrawat/selfie-auth-api)**
 >   The containerized FastAPI backend and identity database.
-> - **Frontend Demo:** [Link to your future Demo repo]:
->   he Streamlit FinTech frontend client demonstrating Step-Up Authentication.
+> - **[selfie-auth-api-demo](https://github.com/Sbrawat/selfie-auth-api-demo):**
+>   The Streamlit FinTech frontend client demonstrating Step-Up Authentication.
 
 _Archived code including Version 1 and initial experiments are preserved here for historical context._
 
